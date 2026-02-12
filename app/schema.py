@@ -1,15 +1,15 @@
 # app/schema.py
 from dataclasses import dataclass
+from typing import List, Optional
 
 @dataclass
 class Context:
-    """Runtime context for Booksnap agent."""
     username: str
     book_title: str
-    summary: str   # ✅ TAMBAH
+    summary: str
 
 @dataclass
 class ResponseFormat:
-    """Structured response from agent."""
     answer: str
     book_title: str
+    recommendation_questions: Optional[List[str]]

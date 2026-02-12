@@ -9,9 +9,11 @@ from app.schema import Context
 
 app = FastAPI()
 
+checkpointer = get_checkpointer()
+
 agent = build_agent(
     model=get_model(),
-    checkpointer=get_checkpointer()
+    checkpointer=checkpointer
 )
 
 class ChatRequest(BaseModel):
@@ -22,6 +24,8 @@ class ChatRequest(BaseModel):
 
 @app.post("/chat")
 def chat(req: ChatRequest):
+    thread_id = req.username
+
     response = agent.invoke(
         {"messages": [{"role": "user", "content": req.message}]},
         context=Context(
@@ -29,7 +33,23 @@ def chat(req: ChatRequest):
             book_title=req.book_title,
             summary=req.summary       
         ),
-        config={"configurable": {"thread_id": req.username}},  
+        config={"configurable": {"thread_id": thread_id}},  
     )
 
-    return response["structured_response"]
+    result = response["structured_response"]
+
+
+    state = checkpointer.get(
+        {"configurable": {"thread_id": thread_id}}
+    )
+
+    if state and len(state["channel_values"]["messages"]) <= 2:
+        result.recommendation_questions = [
+            "Who is the main character in this story?",
+            "What happens at the beginning of the story?",
+            "How does the character feel in this part of the story?"
+        ]
+    else:
+        result.recommendation_questions = None
+
+    return result
