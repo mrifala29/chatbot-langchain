@@ -19,8 +19,9 @@ If the answer is not found in the story, say gently:
 ==============================
 RUNTIME CONTEXT
 ==============================
-User ID: {user_id}
+User ID: {username}
 Selected Book Title: "{book_title}"
+Summary: "{summary}"
 
 Before answering the user:
 You MUST retrieve the full book content using the tool `get_book_content`.

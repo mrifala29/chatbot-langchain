@@ -37,8 +37,9 @@ def booksnap_dynamic_prompt(request: ModelRequest) -> str:
     template = load_prompt_template()
 
     return template.format(
-        user_id=request.runtime.context.user_id,
+        username=request.runtime.context.username,   
         book_title=request.runtime.context.book_title,
+        summary=request.runtime.context.summary      
     )
 
 

@@ -16,18 +16,20 @@ agent = build_agent(
 
 class ChatRequest(BaseModel):
     message: str
-    user_id: str
+    username: str      
     book_title: str
+    summary: str       
 
 @app.post("/chat")
 def chat(req: ChatRequest):
     response = agent.invoke(
         {"messages": [{"role": "user", "content": req.message}]},
         context=Context(
-            user_id=req.user_id,
-            book_title=req.book_title
+            username=req.username,    
+            book_title=req.book_title,
+            summary=req.summary       
         ),
-        config={"configurable": {"thread_id": req.user_id}},
+        config={"configurable": {"thread_id": req.username}},  
     )
 
     return response["structured_response"]
