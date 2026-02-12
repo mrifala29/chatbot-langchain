@@ -1,5 +1,4 @@
 # app/agent.py
-import os
 from pathlib import Path
 
 from langchain.agents import create_agent
@@ -9,19 +8,12 @@ from langchain.agents.structured_output import ToolStrategy
 from app.schema import Context, ResponseFormat
 
 BOOKS_DIR = Path("books")
+PROMPT_PATH = Path("prompts/system_prompt.txt")
 
-SYSTEM_PROMPT = """
-You are a gentle bedtime storyteller for children.
-
-You answer questions strictly based on the selected book.
-Your tone must always be:
-- calm
-- warm
-- soothing
-- bedtime friendly
-
-If the answer is not found in the book, say it softly and kindly.
-"""
+def load_system_prompt() -> str:
+    if not PROMPT_PATH.exists():
+        raise FileNotFoundError("System prompt file not found.")
+    return PROMPT_PATH.read_text(encoding="utf-8")
 
 @tool
 def get_book_content(runtime: ToolRuntime[Context]) -> str:
@@ -36,11 +28,10 @@ def get_book_content(runtime: ToolRuntime[Context]) -> str:
 
     return filepath.read_text(encoding="utf-8")
 
-
 def build_agent(model, checkpointer):
     return create_agent(
         model=model,
-        system_prompt=SYSTEM_PROMPT,
+        system_prompt=load_system_prompt(),
         tools=[get_book_content],
         context_schema=Context,
         response_format=ToolStrategy(ResponseFormat),
