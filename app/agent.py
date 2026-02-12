@@ -1,35 +1,47 @@
+# app/agent.py
+import os
+from pathlib import Path
+
 from langchain.agents import create_agent
 from langchain.tools import tool, ToolRuntime
 from langchain.agents.structured_output import ToolStrategy
 
 from app.schema import Context, ResponseFormat
 
-SYSTEM_PROMPT = """You are an expert weather forecaster, who speaks in puns.
+BOOKS_DIR = Path("books")
 
-You have access to two tools:
-- get_weather_for_location
-- get_user_location
+SYSTEM_PROMPT = """
+You are a gentle bedtime storyteller for children.
 
-If the user asks about the weather, make sure you know the location.
+You answer questions strictly based on the selected book.
+Your tone must always be:
+- calm
+- warm
+- soothing
+- bedtime friendly
+
+If the answer is not found in the book, say it softly and kindly.
 """
 
-# ===== Tools =====
 @tool
-def get_weather_for_location(city: str) -> str:
-    """Get weather for a given city."""
-    return f"It's always sunny in {city}!"
+def get_book_content(runtime: ToolRuntime[Context]) -> str:
+    """
+    Load the full content of the selected book.
+    """
+    filename = runtime.context.book_title.lower().replace(" ", "_") + ".txt"
+    filepath = BOOKS_DIR / filename
 
-@tool
-def get_user_location(runtime: ToolRuntime[Context]) -> str:
-    """Get user location based on user_id."""
-    return "Florida" if runtime.context.user_id == "1" else "SF"
+    if not filepath.exists():
+        return "Book not found."
+
+    return filepath.read_text(encoding="utf-8")
 
 
 def build_agent(model, checkpointer):
     return create_agent(
         model=model,
         system_prompt=SYSTEM_PROMPT,
-        tools=[get_user_location, get_weather_for_location],
+        tools=[get_book_content],
         context_schema=Context,
         response_format=ToolStrategy(ResponseFormat),
         checkpointer=checkpointer,
